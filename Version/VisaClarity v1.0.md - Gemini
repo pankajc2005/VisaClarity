@@ -1,0 +1,123 @@
+# VisaClarity v1.0 - Technical Audit & Architecture Review
+
+## Executive Summary
+This report presents a comprehensive technical audit of the **VisaClarity v1.0 roadmap generation pipeline**. While the pipeline successfully employs an asynchronous webhook pattern and integrates modern tooling (Supabase, Lovable AI Gateway, Tavily, and Gemini), its output quality is severely constrained by lossy data truncation, rigid search strategies, and hallucination risks caused by zero-shot constraint stacking on lightweight AI models.
+
+The highest priority upgrades involve fixing severe currency calculation hallucinations, stopping aggressive source truncation, and decoupling the execution loop by leveraging the existing—but currently unused—Saga framework (`saga.server.ts`) to prevent expensive redundant work during document rendering failures.
+
+---
+
+## 1. Architecture Audit
+
+### 1.1 End-to-End Pipeline Map
+1. **Data Ingestion (`personalized-roadmap.functions.ts`):** 
+   - A `createServerFn` validates the user profile via Zod, checks tier entitlements, enforces parallel limits (max 3), and queues a row in `personalized_roadmap_requests`.
+2. **Orchestration / Working Loop (`craft-personalized-roadmap.ts`):** 
+   - A webhook iterates over `queued` jobs (max 2 per tick) and locks them by setting them to `in_progress`.
+   - Uses a mono-block `try/catch` wrapper spanning multiple remote boundaries.
+3. **Data Gathering (`personalized-roadmap-research.server.ts`):** 
+   - Performs up to 7 concurrent hardcoded Tavily queries.
+   - Dedupes results based on URLs and strips contextual metadata.
+4. **AI Inference (`personalized-roadmap-craft.server.ts`):** 
+   - Merges the profile and research into an aggressive zero-shot prompt.
+   - Calls `chatCompletion` via AI Gateway pointing safely to `google/gemini-2.5-flash-lite`, enforcing a strict JSON schema output.
+5. **Output Rendering & Storage:** 
+   - Passes the JSON response to PDF and DOCX generators concurrently.
+   - Puts generated files into private Supabase buckets.
+   - Writes paths back to the request row and updates status to `ready`.
+
+### 1.2 Architecture Evaluation
+* **Coupling & Separation of Concerns:** Excellent functional separation across domains (research vs craft vs export). 
+* **Single Point of Failure / Over-engineering:** The orchestration loop uses a massive `try/catch` block for the entire pipeline. If `generateRoadmapDocx()` fails at the very end, the job retries *the entire process*, needlessly burning AI Gateway credits, Tavily search credits, and significantly increasing latency.
+* **Under-utilized Assets:** The codebase contains a custom `saga.server.ts` abstraction designed *specifically* to handle this cross-system distributed transaction, yet the orchestrator completely ignores it.
+
+---
+
+## 2. Quality Degradation Analysis
+
+The following design decisions are actively downgrading roadmap generation quality:
+
+### 2.1 Lossy Transformations (Severe Content Truncation)
+* **Root Cause:** In `researchPersonalizedRoadmap`, Tavily results are silently truncated: `(r.content ?? "").slice(0, 800)`. 
+* **Impact:** Visa requirement pages are dense. 800 characters barely covers the introductory paragraphs of an embassy page. The model misses financial thresholds, specific document lists, and updated 2026 rules entirely because the context was sliced out before it reached the AI.
+
+### 2.2 Pre-Programmed Math Hallucinations
+* **Root Cause:** The System Prompt strictly commands: `ALWAYS show amounts in destination's local currency AND the customer's budget currency`. 
+* **Impact:** The pipeline provides *no live exchange rates* to the model. Demanding dual-currency conversions from a `lite` parameter model guarantees hallucinated currency equivalents, risking terrible financial advice for premium users attempting visa applications.
+
+### 2.3 Search Query Rigidity
+* **Root Cause:** Queries are strictly constructed via string interpolation (e.g. `${destination} blocked account ${purpose} amount 2026 official requirement`).
+* **Impact:** Many countries do not use "blocked accounts" (mostly Germany). Generating this hardcoded query for a generic search contaminates the context window with irrelevant or highly inaccurate SEO spam results, confusing the model during synthesis.
+
+### 2.4 Lack of Reasoning Space (Zero-Shot Schema)
+* **Root Cause:** The `RESPONSE_SCHEMA` lacks any Chain-of-Thought (CoT) staging. 
+* **Impact:** Standard LLM behavior degrades drastically when forced to emit complex, cross-referenced structured keys (`estimatedTotalCost`, `documents`, `steps`) directly, without an explicit staging ground to internally plan chronological logic or aggregate costs.
+
+### 2.5 "Failing Open" on Data Loss
+* **Root Cause:** If Tavily rejects the request (rate limits), it fails silently with an empty array. The System Prompt instructs the model to "rely on your training knowledge" if research is empty.
+* **Impact:** This practically guarantees dangerous, outdated hallucinations under the guise of an authoritative, tailored premium document. 
+
+---
+
+## 3. Upgrade & Improvement Opportunities
+
+### 3.1 Unpack Gemini's Large Context Window
+* **Issue:** Aggressive 800-character truncation of search content.
+* **Upgrade:** Pass expanded or full Markdown content (up to 15,000 chars per result). Gemini 2.5 Flash Lite easily supports massive context windows. Utilizing this model's structural advantage eliminates data-loss.
+
+### 3.2 "Inject & Calculate" Live Financial Context
+* **Issue:** Hallucinated currency conversions.
+* **Upgrade:** Before kicking off the AI query, fetch a live exchange rate cache (e.g., USD → EUR, INR → EUR or whichever are requested by `destination` and `budgetCurrency`). Append this `exchange_rate` factor string precisely into the user's prompt context. 
+
+### 3.3 Add Chain-of-Thought to JSON Schema
+* **Issue:** Poor chronological sorting and hallucinated reasoning.
+* **Upgrade:** Add `_reasoning: { type: "string" }` as the very **first** key in `RESPONSE_SCHEMA` properties. Prime it in the prompt: `"Use _reasoning to mentally calculate costs, identify missing documents for the specific employment type, and draft a timeline step-by-step before filling the final schema fields."`
+
+### 3.4 Orchestration Refactor via `saga.server.ts`
+* **Issue:** Blindly retrying expensive operations due to downstream export failures.
+* **Upgrade:** Convert the large `processRow` try/catch using `runSaga`. 
+  - *Step 1*: Research & Craft (save intermediate JSON conditionally to DB/Cache).
+  - *Step 2*: Render PDF/DOCX (if this fails, DO NOT penalize Step 1).
+
+### 3.5 LLM-Driven Dynamic Queries
+* **Issue:** Irrelevant or hallucinated search spam due to hardcoded queries.
+* **Upgrade:** Use a fast, ultra-cheap precursor LLM call to *decompose* the profile into 3 highly accurate search queries. 
+
+---
+
+## 4. Technical Backend Recommendations
+
+### 4.1 Libraries & Frameworks
+* **Generative AI SDK:** Adopt `@ai-sdk/openai` or `Vercel AI SDK` (`generateObject`) to handle structured Zod-validation, automatic schema retry handling, and token usage metrics locally without bespoke fetch logic.
+* **Context Extraction/Scraping:** Consider `Jina Reader API` or `FireCrawl` for high-fidelity markdown formatting compared to raw algorithmic snippets from Tavily.
+
+### 4.2 Algorithms & Methods
+* **Search Caching Layer:** Implement a global Redis or Supabase cache on specific queries. Visas are highly uniform. E.g., `hash("indian tourist visa france 2026")`. Skip Tavily entirely if ran in the last 48 hours to save costs and reduce latency.
+
+### 4.3 System Design Patterns
+* **Checkpoint & Resume (Saga):** Fully embrace Event-Driven Checkpointing. Persist the AI `CraftedRoadmap` object to the DB row *before* generating PDFs.
+
+### 4.4 Inference & Prompt Engineering
+* **Model Step-Up:** If the strict structured outputs frequently fail, switch to `gemini-1.5-pro` or `claude-3-5-sonnet`. For cheaper scaling, standard `gemini-2.5-flash` rather than the `lite` variant yields measurably higher JSON-adherence on deep schemas.
+* **Structured Fallbacks:** Provide the model explicit logic handles for missing data. E.g. *"If no exact embassy appointment method is verified in context, do not create a fake portal link. Instead state: 'Contact local consulate'."*
+
+---
+
+## 5. Scoring & Prioritization Matrix
+
+| Action Item | Area | Output Quality Impact | Implementation Complexity | Time to Value |
+| :--- | :--- | :---: | :---: | :---: |
+| **1. Stop Context Truncation** | Research | 🟢 High | 🟢 Low | Immediate |
+| **2. Prepend CoT `_reasoning` Field** | Inference | 🟢 High | 🟢 Low | Immediate |
+| **3. Inject Live Exchange Rates** | Data Flow | 🟢 High | 🟡 Medium | Fast |
+| **4. Implement Saga Architecture** | Backend / DevOps| 🟡 Medium | 🟡 Medium | Moderate |
+| **5. Add Query Response Caching** | Data Flow | 🟡 Low (Cost saving) | 🟡 Medium | Moderate |
+| **6. LLM-Generated Search Queries** | Research | 🟢 High | 🔴 High | Long |
+| **7. Upgrade to Flash/Pro models** | Inference | 🟡 Medium | 🟢 Low | Immediate |
+
+### Proposed Execution Plan:
+**Phase 1 (Day 1 - Quick Wins):** Update system prompt, inject `_reasoning` variable into the JSON schema, modify the length limitation applied to Tavily search snippets. Stop "failing open" silently when the research bundle is entirely empty.
+
+**Phase 2 (Sprint 1 - Reliability):** Abstract the overarching monolith webhook using the available `saga.server.ts` primitive. Add a lightweight exchange-rate fetching function during the profile building step.
+
+**Phase 3 (Ongoing - Cost & Performance):** Implement query caching and evaluate using a more specialized web-scraper architecture (e.g. FireCrawl) to yield highly-structured markdown over base text snippets.

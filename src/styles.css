@@ -1,0 +1,210 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--card-foreground);
+  --color-primary: var(--foreground);
+  --color-primary-foreground: var(--background);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--background);
+  --color-accent-hover: var(--accent-hover);
+  --color-cream: var(--cream);
+  --color-cream-foreground: var(--cream-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--background);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #141414;
+  --muted-foreground: #5c5c5c;
+  --muted: #f4f4f2;
+  --accent: #141414;
+  --accent-hover: #2a2a2a;
+  --cream: #141414;
+  --cream-foreground: #ffffff;
+  --card: #fafaf8;
+  --card-foreground: #141414;
+  --border: #e6e4dd;
+  --border-strong: #cfcdc5;
+  --destructive: #b94a3b;
+  /* Quiet-luxury gold — reserved for money/decision surfaces only */
+  --gold: oklch(0.78 0.09 85);
+  --gold-soft: oklch(0.88 0.06 88);
+  --gold-deep: oklch(0.62 0.1 78);
+  --shadow-gold:
+    0 0 0 1px color-mix(in oklab, var(--gold) 35%, transparent),
+    0 12px 40px -16px color-mix(in oklab, var(--gold) 30%, transparent);
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #e8e4da;
+  --muted-foreground: #a39d92;
+  --muted: #0a0a0a;
+  --accent: #ede6d3;
+  --accent-hover: #f5efde;
+  --cream: #ede6d3;
+  --cream-foreground: #0a0a0a;
+  --card: #0a0a0a;
+  --card-foreground: #e8e4da;
+  --border: #1a1a1a;
+  --border-strong: #2a2a2a;
+  --destructive: #b94a3b;
+  --gold: oklch(0.8 0.1 86);
+  --gold-soft: oklch(0.9 0.07 88);
+  --gold-deep: oklch(0.7 0.11 82);
+  --shadow-gold:
+    0 0 0 1px color-mix(in oklab, var(--gold) 45%, transparent),
+    0 12px 48px -14px color-mix(in oklab, var(--gold) 40%, transparent);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide the native cursor only when the custom cursor is mounted (fine pointer devices). */
+html.custom-cursor-active,
+html.custom-cursor-active * {
+  cursor: none !important;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    transition:
+      background-color 1400ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  /* Slow, cinematic theme cross-fade for every surface, border, text, icon */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 1200ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* Soft radial vignette behind the hero — pure CSS, no asset */
+.hero-vignette {
+  position: relative;
+  isolation: isolate;
+}
+.hero-vignette::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 45%, rgba(237, 230, 211, 0.06), transparent 70%),
+    radial-gradient(ellipse 120% 80% at 50% 100%, rgba(237, 230, 211, 0.03), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+select option {
+  background-color: #ffffff;
+  color: #141414;
+}
+
+/* Gold shimmer — single sweep on hover, restrained */
+.gold-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.gold-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in oklab, var(--gold) 55%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-110%);
+  transition: transform 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.gold-shimmer:hover::after {
+  transform: translateX(110%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gold-shimmer::after {
+    transition: none;
+  }
+}
+
+.print-only {
+  display: none !important;
+}
+
+@media print {
+  @page {
+    margin: 18mm 14mm 16mm 14mm;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .blur-md {
+    filter: none !important;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+  /* Force-expand collapsed sections */
+  [data-collapsible-content].hidden {
+    display: block !important;
+  }
+  /* Each major section starts on a new page (except the first) */
+  section[data-roadmap-section] {
+    break-before: page;
+    page-break-before: always;
+  }
+  section[data-roadmap-section]:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
+  /* Avoid splitting cards and rows */
+  .break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
