@@ -4,7 +4,7 @@ ALTER TABLE public.roadmap_cache
 
 -- Backfill existing rows with a random 10-char slug (url-safe)
 UPDATE public.roadmap_cache
-SET share_slug = lower(substr(encode(gen_random_bytes(8), 'base64'), 1, 10))
+SET share_slug = lower(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10))
 WHERE share_slug IS NULL;
 
 -- Sanitize any '/' or '+' that base64 may have produced
