@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -12,6 +12,17 @@ import {
 import { GA_MEASUREMENT_ID } from "@/lib/core/platform";
 
 import appCss from "../styles.css?url";
+import { WifiOff, RefreshCcw } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
 import { SmoothScroll } from "@/components/common/SmoothScroll";
 import { CustomCursor } from "@/components/common/CustomCursor";
 import { ErrorReporter } from "@/components/error/ErrorReporter";
@@ -40,8 +51,66 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  const [isOffline, setIsOffline] = useState(
+    typeof navigator !== "undefined" ? !navigator.onLine : false,
+  );
   const router = useRouter();
+
+  useEffect(() => {
+    function handleOnline() {
+      setIsOffline(false);
+    }
+    function handleOffline() {
+      setIsOffline(true);
+    }
+
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setIsOffline(true);
+    }
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (isOffline) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+        <Card className="w-full max-w-md border-border-strong shadow-gold relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-3 opacity-10">
+            <WifiOff size={120} />
+          </div>
+          <CardHeader className="relative z-10 pb-4 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-foreground">
+              <WifiOff className="h-8 w-8" />
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight">You're Offline</CardTitle>
+            <CardDescription className="text-base mt-2">
+              It looks like your internet connection has dropped.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="relative z-10 space-y-4 text-sm text-muted-foreground">
+            <ul className="space-y-2 list-disc pl-5 text-left">
+              <li>Check your network cables, modem, and router.</li>
+              <li>Ensure your device's Wi-Fi or cellular data is enabled.</li>
+              <li>Try reconnecting to your Wi-Fi network.</li>
+            </ul>
+          </CardContent>
+          <CardFooter className="relative z-10 pt-4 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Button onClick={() => window.location.reload()} className="w-full sm:w-auto gap-2">
+              <RefreshCcw className="h-4 w-4" />
+              Retry Connection
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  console.error(error);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
