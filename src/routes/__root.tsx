@@ -27,6 +27,7 @@ import { SmoothScroll } from "@/components/common/SmoothScroll";
 import { CustomCursor } from "@/components/common/CustomCursor";
 import { ErrorReporter } from "@/components/error/ErrorReporter";
 import { GlobalErrorListener } from "@/components/error/GlobalErrorListener";
+import { CookieBanner } from "@/components/common/CookieBanner";
 
 function NotFoundComponent() {
   return (
@@ -255,6 +256,7 @@ function RootComponent() {
       <SmoothScroll />
       <CustomCursor />
       <GlobalErrorListener />
+      <CookieBanner />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
