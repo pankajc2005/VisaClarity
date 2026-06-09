@@ -147,6 +147,9 @@ Workers runtime (`workerd`) does **NOT** support: `sharp`, `puppeteer`, `canvas`
 ### 5.10 Free beta — no paywalls in UI
 v1 ships 100% free. Pro / Pro Max code stays behind flags in `src/lib/core/platform.ts`. Do not surface `LockedFeature`, upgrade modals, or pricing tiers without explicit user approval.
 
+### 5.11 UI Verification
+For any user interface changes, you must always provide screenshots or a short video demonstrating the "before" and "after" states as part of your pull request or commit message summary. This ensures UI regressions are visibly checked.
+
 ---
 
 ## 6. AI Calls — The Only Pattern
