@@ -36,6 +36,10 @@ dist-ssr
 # Lovable-specific (do not commit)
 .lovable/
 
+# AI agent and documentation (do not commit)
+.ai/
+documentation/
+
 # Lock files (choose one - this project uses bun)
 bun.lock
 package-lock.json
