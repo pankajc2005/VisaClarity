@@ -182,8 +182,10 @@ export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadm
           });
         }
 
-        // Process in parallel to improve performance
-        await Promise.all(list.map(processRow));
+        // Process sequentially to bound concurrent Gemini cost per tick
+        for (const row of list) {
+          await processRow(row);
+        }
 
         return new Response(JSON.stringify({ processed: list.length }), {
           status: 200,
