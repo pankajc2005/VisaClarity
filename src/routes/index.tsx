@@ -685,11 +685,15 @@ function Landing() {
                 Visa requirements, <em className="italic text-cream font-normal">answered.</em>
               </h2>
             </div>
-            <div className="mt-14 divide-y divide-border-strong border-y border-border-strong">
+            <div className="mt-14 border-t border-border-strong">
               <Accordion type="single" collapsible className="w-full">
                 {FAQS.map((f, index) => (
-                  <AccordionItem key={f.q} value={`item-${index}`} className="py-2 border-b-0">
-                    <AccordionTrigger className="text-[17px] md:text-[19px] font-medium text-foreground hover:no-underline [&[data-state=open]>svg]:rotate-45">
+                  <AccordionItem
+                    key={f.q}
+                    value={`item-${index}`}
+                    className="py-2 border-border-strong"
+                  >
+                    <AccordionTrigger className="text-[17px] md:text-[19px] font-medium text-foreground hover:no-underline">
                       <span className="text-left">{f.q}</span>
                     </AccordionTrigger>
                     <AccordionContent className="mt-2 text-[15px] leading-[1.75] text-muted-foreground max-w-[760px]">

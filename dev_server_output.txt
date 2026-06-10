@@ -1,0 +1,74 @@
+$ vite dev
+ℹ Using cloudflare-dev emulation in development mode.
+
+[nitro]  WARN  Wrangler is not installed. Please install it using npx nypm i wrangler to enable dev emulation.
+
+
+  VITE v7.3.5  ready in 1632 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: use --host to expose
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:56:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:87:26 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:127:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:151:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:242:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:256:38 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:329:31 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:350:29 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:406:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:418:31 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:441:36 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:534:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:570:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:651:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:676:28 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:697:34 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:730:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:741:40 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:44 AM [vite] (ssr) warning: /app/src/lib/blog/blog.functions.ts:757:37 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/blog/blog.functions.ts
+5:18:45 AM [vite] (ssr) warning: /app/src/lib/roadmap/roadmap.functions.ts:508:32 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/roadmap/roadmap.functions.ts
+5:18:45 AM [vite] (ssr) warning: /app/src/lib/roadmap/roadmap.functions.ts:658:33 createServerFn().inputValidator() is deprecated. Use createServerFn().validator() instead.
+  Plugin: tanstack-start-core::server-fn:ssr
+  File: /app/src/lib/roadmap/roadmap.functions.ts
+error: script "dev" exited with code 143
