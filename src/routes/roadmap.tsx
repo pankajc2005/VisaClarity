@@ -339,7 +339,7 @@ function LoadingState() {
   }, [stages.length]);
 
   return (
-    <div className="mt-10 animate-in fade-in duration-500 fade-out duration-500">
+    <div className="mt-10 animate-in fade-in duration-500">
       <div className="border border-border-strong bg-card p-6">
         <div className="flex items-center gap-3">
           <span className="inline-block w-1.5 h-1.5 bg-cream rounded-full animate-pulse" />
@@ -391,8 +391,8 @@ function RoadmapSkeleton() {
       {/* Sections Skeletons */}
       <div className="mt-12 space-y-12">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} style={{ animationDelay: `${i * 0.15}s` }}>
-            <div className="flex items-baseline justify-between gap-4 animate-pulse mb-5">
+          <div key={i} className="animate-pulse" style={{ animationDelay: `${i * 0.15}s` }}>
+            <div className="flex items-baseline justify-between gap-4 mb-5">
               <div>
                 <div className="h-2.5 w-8 bg-muted/40 rounded mb-3"></div>
                 <div className="h-7 w-48 bg-muted/40 rounded"></div>
@@ -401,7 +401,7 @@ function RoadmapSkeleton() {
 
             <div className="space-y-4">
               {Array.from({ length: 2 }).map((_, j) => (
-                <div key={j} className="border border-border-strong bg-card p-5 animate-pulse">
+                <div key={j} className="border border-border-strong bg-card p-5">
                   <div className="flex items-start gap-4">
                     <div className="w-5 h-5 rounded-full border border-muted/40 bg-muted/20 shrink-0 mt-0.5"></div>
                     <div className="flex-1 space-y-3 mt-1">
