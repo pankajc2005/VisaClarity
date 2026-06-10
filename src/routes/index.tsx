@@ -6,6 +6,7 @@ import { ScrollProgress } from "@/components/landing/ScrollProgress";
 import { Reveal } from "@/components/common/Reveal";
 import { TypingCycle } from "@/components/common/TypingCycle";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import serializeJavascript from "serialize-javascript";
 import { FeedbackWidget } from "@/components/common/FeedbackWidget";
 import { UserNav } from "@/components/auth/UserNav";
 
@@ -204,11 +205,14 @@ function JsonLd({ type, data }: { type: string; data: unknown }) {
       type="application/ld+json"
       suppressHydrationWarning
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": type,
-          ...(data as object),
-        }),
+        __html: serializeJavascript(
+          {
+            "@context": "https://schema.org",
+            "@type": type,
+            ...(data as object),
+          },
+          { isJSON: true },
+        ),
       }}
     />
   );
