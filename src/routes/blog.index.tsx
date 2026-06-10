@@ -1,5 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import serializeJavascript from "serialize-javascript";
+import { z } from "zod";
+import type { ChangeEvent } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { listPublishedPosts } from "@/lib/blog/blog.functions";
@@ -9,12 +13,34 @@ const PAGE_TITLE = "Visa Guides & Country Checklists | VisaClarity";
 const PAGE_DESCRIPTION =
   "In-depth visa guides: exact amounts, document checklists, processing times, and rejection patterns by country and visa type.";
 
+type BlogPost = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  category: string;
+  hero_image_url?: string;
+  hero_image_alt?: string;
+  reading_minutes: number;
+  published_at?: string;
+  author_id?: string;
+};
+
 const postsQuery = queryOptions({
   queryKey: ["blog", "published"],
   queryFn: () => listPublishedPosts(),
 });
 
+const SearchSchema = z
+  .object({
+    q: z.string().optional(),
+    category: z.string().optional(),
+  })
+  .passthrough();
+
 export const Route = createFileRoute("/blog/")({
+  validateSearch: (search) => SearchSchema.parse(search),
   loader: ({ context }) => context.queryClient.ensureQueryData(postsQuery),
   head: () => ({
     meta: [
@@ -40,13 +66,48 @@ export const Route = createFileRoute("/blog/")({
 
 function BlogIndex() {
   const { data } = useSuspenseQuery(postsQuery);
+  const { q, category } = useSearch({ from: "/blog" });
+  const navigate = useNavigate({ from: "/blog" });
   const posts = data.posts;
   const authorsById = new Map(data.authors.map((a) => [a.id, a]));
+
+  const uniqueCategories = Array.from(
+    new Set(posts.map((p: BlogPost) => p.category).filter(Boolean)),
+  ).sort();
+  const activeCategory = category || "All";
+  const searchQuery = q || "";
+
+  const filteredPosts = posts.filter((p: BlogPost) => {
+    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+    const searchTarget = (p.title + " " + (p.description || "")).toLowerCase();
+    const matchesSearch = !searchQuery || searchTarget.includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleCategoryChange = (newCategory: string) => {
+    navigate({
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        category: newCategory === "All" ? undefined : newCategory,
+      }),
+    });
+  };
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    navigate({
+      search: (prev: Record<string, unknown>) => ({
+        ...prev,
+        q: val || undefined,
+      }),
+      replace: true,
+    });
+  };
 
   const itemList = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    itemListElement: posts.map((p: any, i: any) => ({
+    itemListElement: filteredPosts.map((p: BlogPost, i: number) => ({
       "@type": "ListItem",
       position: i + 1,
       url: `${SITE_URL}/blog/${p.slug}`,
@@ -54,7 +115,7 @@ function BlogIndex() {
     })),
   };
 
-  const [hero, ...rest] = posts;
+  const [hero, ...rest] = filteredPosts;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -104,9 +165,42 @@ function BlogIndex() {
           </p>
         </header>
 
+        {/* Filters and Search */}
+        <div className="mt-12 max-w-[1100px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+            {["All", ...uniqueCategories].map((cat: string) => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryChange(cat)}
+                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
+                  activeCategory === cat
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <div className="relative w-full md:w-64 shrink-0">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search guides..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="pl-9 bg-card border-border h-9"
+            />
+          </div>
+        </div>
+
         {posts.length === 0 ? (
           <p className="mt-20 max-w-[900px] mx-auto text-center text-muted-foreground">
             No guides published yet.
+          </p>
+        ) : filteredPosts.length === 0 ? (
+          <p className="mt-20 max-w-[900px] mx-auto text-center text-muted-foreground">
+            No guides match your search.
           </p>
         ) : (
           <>
@@ -158,7 +252,7 @@ function BlogIndex() {
             )}
 
             <div className="mt-20 max-w-[1100px] mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {rest.map((post: any) => {
+              {rest.map((post: BlogPost) => {
                 const a = post.author_id ? authorsById.get(post.author_id) : null;
                 return (
                   <Link
