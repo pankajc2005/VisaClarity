@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import serializeJavascript from "serialize-javascript";
 import { LeadForm } from "@/components/landing/LeadForm";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
 import { getPublishedPost } from "@/lib/blog/blog.functions";
@@ -260,12 +261,12 @@ function BlogPostPage() {
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJavascript(articleLd, { isJSON: true }) }}
       />
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJavascript(breadcrumbLd, { isJSON: true }) }}
       />
 
       <div className="fixed top-0 inset-x-0 h-0.5 bg-transparent z-50">
