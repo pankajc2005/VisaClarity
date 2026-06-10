@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import serializeJavascript from "serialize-javascript";
 import { z } from "zod";
 import type { ChangeEvent } from "react";
 import { Search } from "lucide-react";
@@ -121,7 +122,7 @@ function BlogIndex() {
       <script
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemList) }}
+        dangerouslySetInnerHTML={{ __html: serializeJavascript(itemList, { isJSON: true }) }}
       />
 
       <nav className="fixed top-0 inset-x-0 z-40 h-16 bg-background/80 backdrop-blur-md border-b border-border">
