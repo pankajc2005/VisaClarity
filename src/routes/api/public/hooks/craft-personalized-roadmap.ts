@@ -68,108 +68,105 @@ async function processRows(rows: RequestRow[]): Promise<void> {
   const successfullyClaimed = rows.filter((r) => claimedIds.has(r.id));
   if (!successfullyClaimed.length) return;
 
-  await Promise.all(
-    successfullyClaimed.map(async (row) => {
-      try {
-        const profile = (row.profile ?? {}) as Record<string, unknown>;
-        const brief: PersonalizedBrief = {
+  for (const row of successfullyClaimed) {
+    try {
+      const profile = (row.profile ?? {}) as Record<string, unknown>;
+      const brief: PersonalizedBrief = {
+        nationality: row.nationality,
+        destination: row.destination,
+        purpose: row.purpose,
+        blockedAccountNeeded: Boolean(profile.blockedAccountNeeded),
+        insuranceNeeded: profile.insuranceNeeded !== false,
+        flightsNeeded: Boolean(profile.flightsNeeded),
+        hotelPreference:
+          typeof profile.hotelPreference === "string" ? profile.hotelPreference : undefined,
+      };
+
+      console.log("[craft-worker] researching", row.id);
+      const research = await researchPersonalizedRoadmap(brief);
+
+      console.log(
+        "[craft-worker] crafting",
+        row.id,
+        "citations:",
+        research.reduce((n, b) => n + b.citations.length, 0),
+      );
+      const crafted: CraftedRoadmap = await craftPersonalizedRoadmap(
+        {
           nationality: row.nationality,
           destination: row.destination,
           purpose: row.purpose,
-          blockedAccountNeeded: Boolean(profile.blockedAccountNeeded),
-          insuranceNeeded: profile.insuranceNeeded !== false,
-          flightsNeeded: Boolean(profile.flightsNeeded),
-          hotelPreference:
-            typeof profile.hotelPreference === "string" ? profile.hotelPreference : undefined,
-        };
+          ...(profile as object),
+        } as Parameters<typeof craftPersonalizedRoadmap>[0],
+        research,
+      );
 
-        console.log("[craft-worker] researching", row.id);
-        const research = await researchPersonalizedRoadmap(brief);
+      console.log("[craft-worker] rendering", row.id);
+      const renderInput = {
+        nationality: row.nationality,
+        destination: row.destination,
+        purpose: row.purpose,
+        roadmap: crafted,
+      };
+      const [pdfBytes, docxBytes] = await Promise.all([
+        generateRoadmapPdf(renderInput),
+        generateRoadmapDocx(renderInput),
+      ]);
 
-        console.log(
-          "[craft-worker] crafting",
-          row.id,
-          "citations:",
-          research.reduce((n, b) => n + b.citations.length, 0),
-        );
-        const crafted: CraftedRoadmap = await craftPersonalizedRoadmap(
-          {
-            nationality: row.nationality,
-            destination: row.destination,
-            purpose: row.purpose,
-            ...(profile as object),
-          } as Parameters<typeof craftPersonalizedRoadmap>[0],
-          research,
-        );
+      const folder = row.user_id;
+      const base = `personalized-${row.id}`;
+      const pdfPath = `${folder}/${base}.pdf`;
+      const docxPath = `${folder}/${base}.docx`;
 
-        console.log("[craft-worker] rendering", row.id);
-        const renderInput = {
-          nationality: row.nationality,
-          destination: row.destination,
-          purpose: row.purpose,
-          roadmap: crafted,
-        };
-        const [pdfBytes, docxBytes] = await Promise.all([
-          generateRoadmapPdf(renderInput),
-          generateRoadmapDocx(renderInput),
-        ]);
-
-        const folder = row.user_id;
-        const base = `personalized-${row.id}`;
-        const pdfPath = `${folder}/${base}.pdf`;
-        const docxPath = `${folder}/${base}.docx`;
-
-        const [pdfUp, docxUp] = await Promise.all([
-          storage
-            .put({
-              bucket: "personalized-roadmaps",
-              path: pdfPath,
-              body: pdfBytes,
-              contentType: "application/pdf",
-            })
-            .then(() => ({ error: null as null | { message: string } }))
-            .catch((e: Error) => ({ error: { message: e.message } })),
-          storage
-            .put({
-              bucket: "personalized-roadmaps",
-              path: docxPath,
-              body: docxBytes,
-              contentType:
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            })
-            .then(() => ({ error: null as null | { message: string } }))
-            .catch((e: Error) => ({ error: { message: e.message } })),
-        ]);
-        if (pdfUp.error) throw new Error(`PDF upload: ${pdfUp.error.message}`);
-        if (docxUp.error) throw new Error(`DOCX upload: ${docxUp.error.message}`);
-
-        await supabaseAdmin
-          .from("personalized_roadmap_requests")
-          .update({
-            status: "ready",
-            ready_at: new Date().toISOString(),
-            notified_at: new Date().toISOString(),
-            pdf_path: pdfPath,
-            docx_path: docxPath,
-            result: crafted as never,
+      const [pdfUp, docxUp] = await Promise.all([
+        storage
+          .put({
+            bucket: "personalized-roadmaps",
+            path: pdfPath,
+            body: pdfBytes,
+            contentType: "application/pdf",
           })
-          .eq("id", row.id);
-
-        console.log("[craft-worker] ready", row.id);
-      } catch (err) {
-        const message = (err as Error).message?.slice(0, 500) ?? "Unknown error";
-        const finalAttempt = row.attempts + 1 >= MAX_ATTEMPTS;
-        console.error("[craft-worker] failed", row.id, message);
-        await supabaseAdmin
-          .from("personalized_roadmap_requests")
-          .update({
-            status: finalAttempt ? "failed" : "queued",
-            error_message: message,
+          .then(() => ({ error: null as null | { message: string } }))
+          .catch((e: Error) => ({ error: { message: e.message } })),
+        storage
+          .put({
+            bucket: "personalized-roadmaps",
+            path: docxPath,
+            body: docxBytes,
+            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
           })
-          .eq("id", row.id);
-      }
-    }),
-  );
+          .then(() => ({ error: null as null | { message: string } }))
+          .catch((e: Error) => ({ error: { message: e.message } })),
+      ]);
+      if (pdfUp.error) throw new Error(`PDF upload: ${pdfUp.error.message}`);
+      if (docxUp.error) throw new Error(`DOCX upload: ${docxUp.error.message}`);
+
+      await supabaseAdmin
+        .from("personalized_roadmap_requests")
+        .update({
+          status: "ready",
+          ready_at: new Date().toISOString(),
+          notified_at: new Date().toISOString(),
+          pdf_path: pdfPath,
+          docx_path: docxPath,
+          result: crafted as never,
+        })
+        .eq("id", row.id);
+
+      console.log("[craft-worker] ready", row.id);
+    } catch (err) {
+      const message = (err as Error).message?.slice(0, 500) ?? "Unknown error";
+      const finalAttempt = row.attempts + 1 >= MAX_ATTEMPTS;
+      console.error("[craft-worker] failed", row.id, message);
+      await supabaseAdmin
+        .from("personalized_roadmap_requests")
+        .update({
+          status: finalAttempt ? "failed" : "queued",
+          error_message: message,
+        })
+        .eq("id", row.id);
+    }
+  }
 }
 
 export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadmap")({
@@ -209,7 +206,7 @@ export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadm
           });
         }
 
-        // Process in parallel with batched queries to improve performance
+        // Process with batched DB queries to eliminate N+1, but process Gemini calls sequentially to bound concurrent cost per tick
         await processRows(list);
 
         return new Response(JSON.stringify({ processed: list.length }), {
