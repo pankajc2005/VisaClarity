@@ -1,0 +1,29 @@
+--- src/routes/about.tsx
++++ src/routes/about.tsx
+@@ -85,16 +85,16 @@
+           and the rejection patterns specific to your nationality and destination.
+         </p>
+
+-        <h2>Why VisaClarity exists</h2>
++        <h2 className="text-2xl">Why VisaClarity exists</h2>
+         <p>
+           Visa rejections rarely come from missing documents. They come from wrong amounts in
+           blocked accounts, insurance policies missing repatriation cover, bank statements formatted
+           for the wrong consulate, and university letters with mismatched dates. Generic embassy
+           pages don't catch these — VisaClarity does.
+         </p>
+
+-        <h2>What VisaClarity covers</h2>
++        <h2 className="text-2xl">What VisaClarity covers</h2>
+         <ul>
+           <li>
+             Student visas — Germany, UK, US (F1), Canada, Australia, France, Ireland, Netherlands,
+@@ -106,7 +106,7 @@
+           <li>Family reunion, business, transit, medical, and PR pathways</li>
+         </ul>
+
+-        <h2>How it works</h2>
++        <h2 className="text-2xl">How it works</h2>
+         <ol>
+           <li>Enter your nationality, destination, and visa purpose.</li>
+           <li>Get a personalized roadmap with documents, costs, timeline, and rejection traps.</li>
