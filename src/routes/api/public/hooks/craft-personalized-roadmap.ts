@@ -50,11 +50,16 @@ async function processRows(rows: RequestRow[]): Promise<void> {
         error_message: null,
       })
       .in("id", ids)
+      .eq("attempts", attempts)
       .eq("status", "queued")
       .select("id");
 
     if (claimErr) {
-      console.log("[craft-worker] batch claim failed", claimErr.message);
+      console.log("[craft-worker] batch claim failed", {
+        attempts,
+        count: ids.length,
+        err: claimErr.message,
+      });
     } else if (claimed) {
       claimed.forEach((c) => claimedIds.add(c.id));
     }
