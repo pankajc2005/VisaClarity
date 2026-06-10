@@ -226,7 +226,7 @@ function RoadmapPage() {
         )}
 
         {data?.roadmap && (
-          <div className="relative">
+          <div className="relative animate-in fade-in duration-1000 slide-in-from-bottom-4">
             <div className={unlocked ? "" : "pointer-events-none select-none"}>
               <TrustBanner
                 verifiedAt={data.roadmap.verifiedAt}
@@ -339,7 +339,7 @@ function LoadingState() {
   }, [stages.length]);
 
   return (
-    <div className="mt-10">
+    <div className="mt-10 animate-in fade-in duration-500 fade-out duration-500">
       <div className="border border-border-strong bg-card p-6">
         <div className="flex items-center gap-3">
           <span className="inline-block w-1.5 h-1.5 bg-cream rounded-full animate-pulse" />
@@ -359,19 +359,61 @@ function LoadingState() {
         </p>
       </div>
 
-      {/* Section skeletons */}
-      <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <RoadmapSkeleton />
+    </div>
+  );
+}
+
+function RoadmapSkeleton() {
+  return (
+    <div className="mt-10">
+      {/* 4 Metric Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="border border-border-strong bg-card p-4 h-[80px] animate-pulse" />
+          <div key={i} className="border border-border-strong bg-card p-4 animate-pulse">
+            <div className="h-2.5 w-16 bg-muted/40 rounded mb-3"></div>
+            <div className="h-5 w-24 bg-muted/40 rounded"></div>
+          </div>
         ))}
       </div>
-      <div className="mt-10 space-y-4">
+
+      {/* Summary Skeletons */}
+      <div className="mt-8 space-y-2 animate-pulse">
+        <div className="h-3 w-full bg-muted/40 rounded"></div>
+        <div className="h-3 w-11/12 bg-muted/40 rounded"></div>
+        <div className="h-3 w-4/5 bg-muted/40 rounded"></div>
+      </div>
+
+      <div className="mt-4 border-l-2 border-muted/40 pl-4 animate-pulse">
+        <div className="h-3 w-64 bg-muted/40 rounded"></div>
+      </div>
+
+      {/* Sections Skeletons */}
+      <div className="mt-12 space-y-12">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="border border-border-strong bg-card p-5 h-[120px] animate-pulse"
-            style={{ animationDelay: `${i * 0.15}s` }}
-          />
+          <div key={i} style={{ animationDelay: `${i * 0.15}s` }}>
+            <div className="flex items-baseline justify-between gap-4 animate-pulse mb-5">
+              <div>
+                <div className="h-2.5 w-8 bg-muted/40 rounded mb-3"></div>
+                <div className="h-7 w-48 bg-muted/40 rounded"></div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {Array.from({ length: 2 }).map((_, j) => (
+                <div key={j} className="border border-border-strong bg-card p-5 animate-pulse">
+                  <div className="flex items-start gap-4">
+                    <div className="w-5 h-5 rounded-full border border-muted/40 bg-muted/20 shrink-0 mt-0.5"></div>
+                    <div className="flex-1 space-y-3 mt-1">
+                      <div className="h-4 w-1/3 bg-muted/40 rounded"></div>
+                      <div className="h-3 w-full bg-muted/20 rounded"></div>
+                      <div className="h-3 w-5/6 bg-muted/20 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>
