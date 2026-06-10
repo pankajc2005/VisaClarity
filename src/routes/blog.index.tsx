@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { z } from "zod";
+import type { ChangeEvent } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
@@ -30,10 +31,12 @@ const postsQuery = queryOptions({
   queryFn: () => listPublishedPosts(),
 });
 
-const SearchSchema = z.object({
-  q: z.string().optional(),
-  category: z.string().optional(),
-});
+const SearchSchema = z
+  .object({
+    q: z.string().optional(),
+    category: z.string().optional(),
+  })
+  .passthrough();
 
 export const Route = createFileRoute("/blog/")({
   validateSearch: (search) => SearchSchema.parse(search),
@@ -62,8 +65,8 @@ export const Route = createFileRoute("/blog/")({
 
 function BlogIndex() {
   const { data } = useSuspenseQuery(postsQuery);
-  const { q, category } = useSearch({ from: "/blog/" });
-  const navigate = useNavigate({ from: "/blog/" });
+  const { q, category } = useSearch({ from: "/blog" });
+  const navigate = useNavigate({ from: "/blog" });
   const posts = data.posts;
   const authorsById = new Map(data.authors.map((a) => [a.id, a]));
 
@@ -89,7 +92,7 @@ function BlogIndex() {
     });
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     navigate({
       search: (prev: Record<string, unknown>) => ({
@@ -190,9 +193,13 @@ function BlogIndex() {
           </div>
         </div>
 
-        {filteredPosts.length === 0 ? (
+        {posts.length === 0 ? (
           <p className="mt-20 max-w-[900px] mx-auto text-center text-muted-foreground">
             No guides published yet.
+          </p>
+        ) : filteredPosts.length === 0 ? (
+          <p className="mt-20 max-w-[900px] mx-auto text-center text-muted-foreground">
+            No guides match your search.
           </p>
         ) : (
           <>
