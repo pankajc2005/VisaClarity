@@ -96,7 +96,7 @@ const checks: Check[] = [
   {
     name: "Storage backend roundtrip",
     run: async () => {
-      const { storage } = await import("../src/lib/storage.server");
+      const { storage } = await import("../src/lib/services/storage.server");
       const bucket = process.env.PORTABILITY_TEST_BUCKET ?? "personalized-roadmaps";
       const path = `_portability/${Date.now()}.txt`;
       await storage.put({

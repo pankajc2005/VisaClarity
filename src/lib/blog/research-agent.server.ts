@@ -133,7 +133,7 @@ export async function tavilySearch(query: string, max = 6): Promise<ResearchHit[
     tier: tierForHost(safeHost(r.url)),
     url: r.url,
     title: r.title ?? r.url,
-    snippet: (r.content ?? "").slice(0, 600),
+    snippet: (r.content ?? "").slice(0, 15000), // Generous snippet limit to prevent lossy truncation (Gemini supports large context windows)
     publishedAt: r.published_date,
   }));
 }

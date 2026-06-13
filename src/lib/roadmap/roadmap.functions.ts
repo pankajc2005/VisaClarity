@@ -6,7 +6,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // ---- Tunables ----
 const FREE_MONTHLY_LIMIT = 1;
-const CACHE_TTL_DAYS = 14;
+const CACHE_TTL_DAYS = 1;
 // Standard tier (free): cheaper/faster model.
 // Deep tier (pro+): bigger model + bigger token budget for richer roadmaps.
 const AI_MODEL_STANDARD = "google/gemini-2.5-flash-lite";
@@ -591,7 +591,29 @@ export const generateRoadmap = createServerFn({ method: "POST" })
       console.warn("[roadmap] Failed to load exchange rates:", err);
     }
 
-    const prompt = `Generate a complete, accurate, fully-cited visa roadmap for:
+    let researchContext = "";
+    try {
+      const { researchStandardRoadmap } = await import("./roadmap-research.server");
+      const citations = await researchStandardRoadmap(nationality, destination, purpose);
+      if (citations.length > 0) {
+        researchContext = `### LIVE SEARCH GROUNDING DATA (Fetched Today)
+Use the following live web search snippets to ground your responses for visa fees, processing times, document checklists, and contact info. Do not guess or use outdated training data if current figures are available below:
+
+${citations.map((c) => `Source: ${c.title} (${c.url})\nSnippet: ${c.snippet}`).join("\n\n")}
+
+Instructions:
+1. Ground visa fees, processing times, and embassy contact info in the grounding data above.
+2. Each source may contain detailed figures, exemptions, and procedural edge cases — read them fully. Do not omit specific amounts, dates, or conditional requirements even if they seem like edge cases.
+3. In your JSON "sources" array, only include URLs that are present in the grounding data above. Do not invent or include other URLs.
+
+---
+`;
+      }
+    } catch (err) {
+      console.warn("[roadmap] Failed to perform web research:", err);
+    }
+
+    const prompt = `${researchContext}Generate a complete, accurate, fully-cited visa roadmap for:
 - Applicant nationality: ${nationality}
 - Destination country: ${destination}
 - Visa purpose: ${purpose}
