@@ -206,8 +206,11 @@ export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadm
           });
         }
 
-        // Process with batched DB queries to eliminate N+1, but process Gemini calls sequentially to bound concurrent cost per tick
-        await processRows(list);
+
+        // Process sequentially to bound concurrent Gemini cost per tick
+        for (const row of list) {
+          await processRow(row);
+        }
 
         return new Response(JSON.stringify({ processed: list.length }), {
           status: 200,

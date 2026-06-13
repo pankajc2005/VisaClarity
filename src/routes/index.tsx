@@ -6,8 +6,15 @@ import { ScrollProgress } from "@/components/landing/ScrollProgress";
 import { Reveal } from "@/components/common/Reveal";
 import { TypingCycle } from "@/components/common/TypingCycle";
 import { ThemeToggle } from "@/components/common/ThemeToggle";
+import serializeJavascript from "serialize-javascript";
 import { FeedbackWidget } from "@/components/common/FeedbackWidget";
 import { UserNav } from "@/components/auth/UserNav";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 
 import { SITE_URL } from "@/lib/core/platform";
 
@@ -204,11 +211,14 @@ function JsonLd({ type, data }: { type: string; data: unknown }) {
       type="application/ld+json"
       suppressHydrationWarning
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": type,
-          ...(data as object),
-        }),
+        __html: serializeJavascript(
+          {
+            "@context": "https://schema.org",
+            "@type": type,
+            ...(data as object),
+          },
+          { isJSON: true },
+        ),
       }}
     />
   );
@@ -679,22 +689,23 @@ function Landing() {
                 Visa requirements, <em className="italic text-cream font-normal">answered.</em>
               </h2>
             </div>
-            <div className="mt-14 divide-y divide-border-strong border-y border-border-strong">
-              {FAQS.map((f) => (
-                <details key={f.q} className="group py-6">
-                  <summary className="flex items-start justify-between gap-6 cursor-pointer list-none">
-                    <h3 className="text-[17px] md:text-[19px] font-medium text-foreground">
-                      {f.q}
-                    </h3>
-                    <span className="font-mono text-cream text-[18px] leading-none mt-1 transition-transform group-open:rotate-45">
-                      +
-                    </span>
-                  </summary>
-                  <p className="mt-4 text-[15px] leading-[1.75] text-muted-foreground max-w-[760px]">
-                    {f.a}
-                  </p>
-                </details>
-              ))}
+            <div className="mt-14 border-t border-border-strong">
+              <Accordion type="single" collapsible className="w-full">
+                {FAQS.map((f, index) => (
+                  <AccordionItem
+                    key={f.q}
+                    value={`item-${index}`}
+                    className="py-2 border-border-strong"
+                  >
+                    <AccordionTrigger className="text-[17px] md:text-[19px] font-medium text-foreground hover:no-underline">
+                      <span className="text-left">{f.q}</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="mt-2 text-[15px] leading-[1.75] text-muted-foreground max-w-[760px]">
+                      {f.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </div>
           </div>
         </section>
