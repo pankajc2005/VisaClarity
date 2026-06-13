@@ -121,7 +121,7 @@ export async function researchPersonalizedRoadmap(
         citations: results.map((r) => ({
           title: r.title?.slice(0, 200) ?? "",
           url: r.url,
-          snippet: (r.content ?? "").slice(0, 800),
+          snippet: (r.content ?? "").slice(0, 15000), // Generous snippet limit to prevent lossy truncation (Gemini supports large context windows)
         })),
       } satisfies ResearchBundle;
     }),

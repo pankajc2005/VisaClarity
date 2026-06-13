@@ -55,8 +55,9 @@ Hard rules:
 7. documents MUST be tailored: list extras specific to the case (sponsor letter if sponsor=yes, employment letter / leave approval if employed, ITR if self-employed, refusal explanation letter if priorRefusals, etc.). Mark critical items.
 8. commonRejectionReasons: 4–6 specific to THIS profile, each with implicit fix in wording.
 9. proTips: 6–10 insider tips that reference the customer's specifics (e.g. "Your travel dates fall during X visa rush — book biometrics 6 weeks earlier").
-10. sources MUST be drawn from the provided citations whenever possible. Do not invent URLs.
-11. Output ONLY valid JSON matching the schema. No markdown, no commentary.`;
+10. EACH SOURCE in the research bundle may contain detailed figures, exemptions, and procedural edge cases — read them fully. Do not omit specific amounts, dates, or conditional requirements even if they seem like edge cases.
+11. sources MUST be drawn from the provided citations whenever possible. Do not invent URLs.
+12. Output ONLY valid JSON matching the schema. No markdown, no commentary.`;
 
 const RESPONSE_SCHEMA = {
   type: "object" as const,
