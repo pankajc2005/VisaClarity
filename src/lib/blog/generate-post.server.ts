@@ -20,7 +20,7 @@ import { generateHeroImage } from "./image-gen.server.ts";
 import { uploadBlogImage } from "./storage.server.ts";
 import WRITER_SYSTEM from "./writer-system.md?raw";
 
-export interface GenerateInput {
+interface GenerateInput {
   topic: string;
   primary_keyword: string;
   secondary_keywords?: string[];
@@ -32,7 +32,7 @@ export interface GenerateInput {
   llm_profile?: "balanced" | "quality" | "fast";
 }
 
-export interface GenerateResult {
+interface GenerateResult {
   ok: boolean;
   post_id?: string;
   slug?: string;
