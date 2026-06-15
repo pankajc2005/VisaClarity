@@ -477,7 +477,7 @@ export async function generatePost(
       .eq("slug", slug)
       .maybeSingle();
     if (!existing) break;
-    slug = `${baseSlug}-${Math.floor(Math.random() * 1000)}`;
+    slug = `${baseSlug}-${crypto.getRandomValues(new Uint32Array(1))[0] % 1000}`;
   }
 
   // Map sources_used into a sources[] payload of the actually-cited subset.
