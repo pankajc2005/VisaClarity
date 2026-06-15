@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute } from "@tanstack/react-router";
 import process from "node:process";
+import crypto from "node:crypto";
 
 export const Route = createFileRoute("/api/public/hooks/blog/cron")({
   server: {
@@ -13,7 +14,16 @@ export const Route = createFileRoute("/api/public/hooks/blog/cron")({
           request.headers.get("authorization") ?? request.headers.get("x-api-key") ?? "";
         const supplied = header.replace(/^Bearer\s+/i, "").trim();
 
-        if (!supplied || supplied !== key) {
+        if (!supplied) {
+          return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        const suppliedHash = crypto.createHash("sha256").update(supplied).digest();
+        const keyHash = crypto.createHash("sha256").update(key).digest();
+        if (!crypto.timingSafeEqual(suppliedHash, keyHash)) {
           return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },
