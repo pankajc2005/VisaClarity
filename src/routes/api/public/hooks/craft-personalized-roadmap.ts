@@ -206,7 +206,6 @@ export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadm
           });
         }
 
-
         // Process sequentially to bound concurrent Gemini cost per tick
         for (const row of list) {
           await processRow(row);
