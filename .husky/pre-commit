@@ -1,0 +1,5 @@
+# Run local secret scanning on staged changes
+gitleaks protect --staged --verbose
+
+# Run formatter and linter on staged files
+bunx lint-staged

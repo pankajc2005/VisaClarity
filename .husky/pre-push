@@ -1,0 +1,11 @@
+# 1. Check database migration security (RLS & Grants)
+bun scripts/lint-migrations.ts || exit 1
+
+# 2. Check TypeScript types
+bun x tsc --noEmit || exit 1
+
+# 3. Run portability checks (verifies Supabase, AI gateway, Storage seams)
+bun scripts/portability-check.ts || exit 1
+
+# 4. Verify production build compiling
+bun run build || exit 1

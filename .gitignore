@@ -40,7 +40,6 @@ dist-ssr
 .ai/
 documentation/
 
-# Lock files (choose one - this project uses bun)
-bun.lock
+# Lock files (this project uses bun — commit bun.lock, ignore others)
 package-lock.json
 yarn.lock

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Roadmap } from "@/lib/roadmap.functions";
+import type { Roadmap } from "@/lib/roadmap/roadmap.functions";
 import type { BLOG_POSTS } from "@/lib/blog/posts";
 
 // ---- Progress (checkbox) tracking, scoped per shareSlug -------------------

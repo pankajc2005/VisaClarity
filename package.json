@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "portability:check": "bun scripts/portability-check.ts"
+    "portability:check": "bun scripts/portability-check.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.80",
@@ -89,9 +90,21 @@
     "globals": "^15.15.0",
     "nitro": "3.0.260429-beta",
     "playwright": "^1.60.0",
+    "@playwright/test": "^1.60.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^8.0.16"
+    "vite": "^7.3.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,json,md}": [
+      "prettier --write"
+    ]
   }
 }

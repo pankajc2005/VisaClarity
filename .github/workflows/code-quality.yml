@@ -1,0 +1,117 @@
+name: VisaClarity Code Quality & Security Gate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  static-analysis:
+    name: Code Quality & Compilation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Prettier Format Check
+        run: bun x prettier --check .
+
+      - name: Run ESLint
+        run: bun run lint
+
+      - name: Strict TypeScript Compilation
+        run: bun x tsc --noEmit
+
+  database-security:
+    name: Database RLS & Schema Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Lint SQL Migration Schemas
+        run: bun scripts/lint-migrations.ts
+
+  security-scan:
+    name: Secret & Vulnerability Auditing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Required for Gitleaks to inspect history
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Gitleaks Secret Detection
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Audit Package Dependencies
+        # Only fail on High/Critical vulnerabilities to avoid blocking CI on minor dev advisories
+        run: bun audit --audit-level=high
+
+  build-validation:
+    name: Production Build Verification
+    needs: [static-analysis, database-security, security-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Application
+        run: bun run build
+        env:
+          # Mock credentials for build-time static resolution
+          VITE_SUPABASE_URL: "https://mock-instance.supabase.co"
+          VITE_SUPABASE_PUBLISHABLE_KEY: "mock-anon-key"
+          SUPABASE_URL: "https://mock-instance.supabase.co"
+          SUPABASE_PUBLISHABLE_KEY: "mock-anon-key"
+          SUPABASE_SERVICE_ROLE_KEY: "mock-service-role-key"
+
+  e2e-smoke-tests:
+    name: Playwright End-to-End Tests
+    needs: build-validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: bun x playwright install --with-deps
+
+      - name: Start Local Server & Run Playwright
+        run: |
+          bun run build
+          bun x playwright test
