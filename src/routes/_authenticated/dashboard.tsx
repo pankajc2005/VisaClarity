@@ -140,9 +140,6 @@ function DashboardPage() {
 }
 
 function useIsAdmin() {
-  // TEMPORARILY ALWAYS TRUE FOR TESTING
-  return true;
-
   const { data } = useQuery({
     queryKey: ["is-admin"],
     queryFn: async () => {
