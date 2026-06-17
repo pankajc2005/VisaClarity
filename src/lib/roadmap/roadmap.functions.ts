@@ -535,12 +535,14 @@ export const generateRoadmap = createServerFn({ method: "POST" })
 
       if (cached?.roadmap) {
         const parsed = RoadmapSchema.parse(cached.roadmap);
+        const rawRoadmap = cached.roadmap as any;
+        const brokenLinks = Array.isArray(rawRoadmap.brokenLinks) ? rawRoadmap.brokenLinks : [];
         return {
           roadmap: {
             ...parsed,
-            verifiedAt: cached.created_at,
+            verifiedAt: rawRoadmap.verifiedAt || cached.created_at,
             cached: true,
-            brokenLinks: [],
+            brokenLinks,
             shareSlug: cached.share_slug,
           },
         };
@@ -622,8 +624,45 @@ ${ratesContext ? `${ratesContext}\n` : ""}Tailor everything to this exact route.
 
     const generated = scrubUrls(await callAI(prompt, deep));
 
-    // 4. Persist to cache (best-effort) — preserve existing slug if row exists.
+    const urlsToVerify: string[] = [];
+    if (generated.appointmentBooking?.url) urlsToVerify.push(generated.appointmentBooking.url);
+    generated.embassyContacts.forEach((e) => {
+      if (e.website) urlsToVerify.push(e.website);
+    });
+    generated.officialLinks.forEach((l) => urlsToVerify.push(l.url));
+    generated.usefulResources.forEach((l) => urlsToVerify.push(l.url));
+    (generated.sources ?? []).forEach((s) => urlsToVerify.push(s.url));
+
+    let deadUrls = new Set<string>();
+    try {
+      const { verifyUrls } = await import("./url-verifier.server");
+      const { dead } = await verifyUrls(urlsToVerify);
+      deadUrls = dead;
+    } catch (err) {
+      console.warn("[roadmap] URL verification failed:", err);
+    }
+
+    const finalRoadmap = {
+      ...generated,
+      appointmentBooking: generated.appointmentBooking
+        ? {
+            ...generated.appointmentBooking,
+            url: deadUrls.has(generated.appointmentBooking.url) ? "" : generated.appointmentBooking.url,
+          }
+        : generated.appointmentBooking,
+      embassyContacts: generated.embassyContacts.map((e) => ({
+        ...e,
+        website: deadUrls.has(e.website) ? "" : e.website,
+      })),
+      officialLinks: generated.officialLinks.filter((l) => !deadUrls.has(l.url)),
+      usefulResources: generated.usefulResources.filter((l) => !deadUrls.has(l.url)),
+      sources: (generated.sources ?? []).filter((s) => !deadUrls.has(s.url)),
+    };
+    
+    const brokenLinks = Array.from(deadUrls);
     const verifiedAt = new Date().toISOString();
+
+    // 4. Persist to cache (best-effort) — preserve existing slug if row exists.
     const { data: existing } = await supabaseAdmin
       .from("roadmap_cache")
       .select("share_slug")
@@ -637,7 +676,7 @@ ${ratesContext ? `${ratesContext}\n` : ""}Tailor everything to this exact route.
         nationality,
         destination,
         purpose,
-        roadmap: generated,
+        roadmap: { ...finalRoadmap, brokenLinks, verifiedAt },
         share_slug: shareSlug,
         created_at: verifiedAt,
         expires_at: new Date(Date.now() + CACHE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
@@ -667,10 +706,10 @@ ${ratesContext ? `${ratesContext}\n` : ""}Tailor everything to this exact route.
 
     return {
       roadmap: {
-        ...generated,
+        ...finalRoadmap,
         verifiedAt,
         cached: false,
-        brokenLinks: [],
+        brokenLinks,
         shareSlug,
       },
     };
@@ -705,12 +744,14 @@ export const getRoadmapBySlug = createServerFn({ method: "GET" })
         .maybeSingle();
       if (!row?.roadmap) return null;
       const parsed = RoadmapSchema.parse(row.roadmap);
+      const rawRoadmap = row.roadmap as any;
+      const brokenLinks = Array.isArray(rawRoadmap.brokenLinks) ? rawRoadmap.brokenLinks : [];
       return {
         roadmap: {
           ...parsed,
-          verifiedAt: row.created_at,
+          verifiedAt: rawRoadmap.verifiedAt || row.created_at,
           cached: true,
-          brokenLinks: [],
+          brokenLinks,
           shareSlug: row.share_slug,
         },
         nationality: row.nationality,
