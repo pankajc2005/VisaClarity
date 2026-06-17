@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { Json } from "@/integrations/supabase/types";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireTier } from "../subscription/entitlements.server";
@@ -27,8 +28,7 @@ export const saveRoadmap = createServerFn({ method: "POST" })
         nationality: data.nationality,
         destination: data.destination,
         purpose: data.purpose,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        roadmap: data.roadmap as any,
+        roadmap: data.roadmap as Json,
       })
       .select("id, created_at")
       .single();

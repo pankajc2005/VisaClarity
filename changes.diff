@@ -1,0 +1,32 @@
+diff --git a/src/lib/blog/llm-chain.server.ts b/src/lib/blog/llm-chain.server.ts
+index d274eac..5872b2c 100644
+--- a/src/lib/blog/llm-chain.server.ts
++++ b/src/lib/blog/llm-chain.server.ts
+@@ -218,26 +218,4 @@ export async function blogChatCompletion(input: BlogChatInput): Promise<BlogChat
+   );
+ }
+
+-// Legacy export for backward compatibility
+-export type LLMSessionKeys = {
+-  openRouterKey?: string;
+-};
+-
+-/**
+- * @deprecated Use blogChatCompletion() instead.
+- * Kept for backward compatibility with any code still using callLLM.
+- */
+-export async function callLLM(
+-  prompt: string,
+-  _keys?: LLMSessionKeys,
+-  opts?: { temperature?: number; max_tokens?: number },
+-): Promise<BlogChatResponse> {
+-  return blogChatCompletion({
+-    purpose: "draft",
+-    messages: [{ role: "user", content: prompt }],
+-    temperature: opts?.temperature,
+-    max_tokens: opts?.max_tokens,
+-  });
+-}
+-
+-export default { blogChatCompletion, callLLM };
++export default { blogChatCompletion };

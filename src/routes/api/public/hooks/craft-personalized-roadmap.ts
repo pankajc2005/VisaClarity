@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { storage } from "@/lib/services/storage.server";
+import crypto from "node:crypto";
 import {
   researchPersonalizedRoadmap,
   type PersonalizedBrief,
@@ -175,8 +176,18 @@ export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadm
       POST: async ({ request }) => {
         // Minimal auth: require Supabase anon key in `apikey` header (canonical cron pattern)
         const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
-        const got = request.headers.get("apikey");
-        if (!expected || got !== expected) {
+        if (!expected) {
+          return new Response(JSON.stringify({ error: "Unauthorized" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
+        const got = request.headers.get("apikey") || "";
+        const suppliedHash = crypto.createHash("sha256").update(got).digest();
+        const keyHash = crypto.createHash("sha256").update(expected).digest();
+
+        if (!crypto.timingSafeEqual(suppliedHash, keyHash)) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
             headers: { "Content-Type": "application/json" },
@@ -208,7 +219,7 @@ export const Route = createFileRoute("/api/public/hooks/craft-personalized-roadm
 
         // Process sequentially to bound concurrent Gemini cost per tick
         for (const row of list) {
-          await processRow(row);
+          await processRows([row]);
         }
 
         return new Response(JSON.stringify({ processed: list.length }), {
