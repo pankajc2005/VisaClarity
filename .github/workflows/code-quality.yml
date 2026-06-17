@@ -53,6 +53,11 @@ jobs:
         with:
           fetch-depth: 0 # Required for Gitleaks to inspect history
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Gitleaks Secret Detection
         uses: gitleaks/gitleaks-action@v3
         env:

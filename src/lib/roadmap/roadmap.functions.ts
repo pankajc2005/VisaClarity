@@ -647,7 +647,9 @@ ${ratesContext ? `${ratesContext}\n` : ""}Tailor everything to this exact route.
       appointmentBooking: generated.appointmentBooking
         ? {
             ...generated.appointmentBooking,
-            url: deadUrls.has(generated.appointmentBooking.url) ? "" : generated.appointmentBooking.url,
+            url: deadUrls.has(generated.appointmentBooking.url)
+              ? ""
+              : generated.appointmentBooking.url,
           }
         : generated.appointmentBooking,
       embassyContacts: generated.embassyContacts.map((e) => ({
@@ -658,7 +660,7 @@ ${ratesContext ? `${ratesContext}\n` : ""}Tailor everything to this exact route.
       usefulResources: generated.usefulResources.filter((l) => !deadUrls.has(l.url)),
       sources: (generated.sources ?? []).filter((s) => !deadUrls.has(s.url)),
     };
-    
+
     const brokenLinks = Array.from(deadUrls);
     const verifiedAt = new Date().toISOString();
 
