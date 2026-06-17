@@ -63,6 +63,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
       - name: Audit Package Dependencies
         # Only fail on High/Critical vulnerabilities to avoid blocking CI on minor dev advisories
         run: bun audit --audit-level=high
